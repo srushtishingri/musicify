@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musicify - Home</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231DB954'><circle cx='12' cy='12' r='12'/></svg>">
+    <style>
+        /* Moving CSS out of inline to reduce DOM complexity */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .sidebar {
+            width: 230px;
+            background-color: #000000;
+            padding: 24px 10px;
+            height: 100%;
+            box-sizing: border-box;
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+        
+        .main-content {
+            margin-left: 230px;
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 90px;
+        }
+        
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 32px;
+            background-color: rgba(0,0,0,0.7);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .content-section {
+            padding: 0 32px;
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 24px;
+        }
+        
+        .card {
+            background-color: #181818;
+            border-radius: 4px;
+            padding: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .card:hover {
+            background-color: #282828;
+        }
+        
+        .card-image {
+            width: 100%;
+            padding-bottom: 100%;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        
+        .play-button {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #1DB954;
+            color: white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+        
+        .card:hover .play-button {
+            display: flex;
+        }
+        
+        .now-playing-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 90px;
+            background-color: #181818;
+            border-top: 1px solid #282828;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 100;
+        }
+        
+        .track-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        
+        .player-controls {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .volume-controls {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background-color: #535353;
+            border-radius: 2px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .progress {
+            height: 100%;
+            width: 0;
+            background-color: #b3b3b3;
+            border-radius: 2px;
+        }
+        
+        .volume-bar {
+            width: 100px;
+            height: 4px;
+            background-color: #535353;
+            border-radius: 2px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .volume-level {
+            height: 100%;
+            width: 80%;
+            background-color: #b3b3b3;
+            border-radius: 2px;
+        }
+        
+        .btn {
+            background-color: transparent;
+            border: none;
+            color: #b3b3b3;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background-color: #1DB954;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 32px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .btn-round {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: white;
+            color: black;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 8px;
+        }
+        
+        .nav-link {
+            color: #b3b3b3;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+        }
+        
+        .nav-link.active {
+            color: white;
+            font-weight: bold;
+        }
+        
+        .nav-icon {
+            margin-right: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                padding: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar">
+            <div style="margin-bottom: 18px;">
+                <h1 style="margin: 0; color: white; font-size: 24px;">
+                    <span style="color: #1DB954;">♫</span> Musicify
+                </h1>
+            </div>
+            
+            <div style="margin-bottom: 24px;">
+                <ul style="list-style-type: none; padding: 0; margin: 0;">
+                    <li>
+                        <a href="#" onclick="showPage('home')" class="nav-link active">
+                            <span class="nav-icon">🏠</span> Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showPage('search')" class="nav-link">
+                            <span class="nav-icon">🔍</span> Search
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showPage('library')" class="nav-link">
+                            <span class="nav-icon">📚</span> Your Library
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div style="margin-top: 24px;">
+                <div style="margin-bottom: 16px;">
+                    <button onclick="showCreatePlaylistModal()" class="btn" style="display: flex; align-items: center;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background-color: #b3b3b3; color: #000000; border-radius: 2px; margin-right: 10px;">+</span>
+                        Create Playlist
+                    </button>
+                </div>
+                <div>
+                    <a href="#" onclick="showPage('playlist', 'liked')" class="nav-link">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: linear-gradient(135deg, #450af5, #c4efd9); color: white; border-radius: 2px; margin-right: 10px;">❤️</span>
+                        Liked Songs
+                    </a>
+                </div>
+            </div>
+            
+            <hr style="border: none; border-top: 1px solid #282828; margin: 16px 0;">
+            
+            <div id="playlist-list" style="margin-top: 16px;">
+                <!-- Playlists will be loaded here -->
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div id="main-content" class="main-content">
+            <!-- Top Navigation Bar -->
+            <div class="nav-bar">
+                <div style="display: flex; gap: 16px;">
+                    <button class="btn" style="background-color: rgba(0,0,0,0.7); color: white; border-radius: 50%; width: 32px; height: 32px;">◀</button>
+                    <button class="btn" style="background-color: rgba(0,0,0,0.7); color: white; border-radius: 50%; width: 32px; height: 32px;">▶</button>
+                </div>
+                <div>
+                    <button onclick="toggleUserMenu()" style="background-color: #000000; color: white; border: none; border-radius: 20px; padding: 5px 10px; display: flex; align-items: center; cursor: pointer;">
+                        <span style="width: 28px; height: 28px; background-color: #333; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px;">👤</span>
+                        <span id="username">User</span>
+                        <span style="margin-left: 8px;">▼</span>
+                    </button>
+                    <div id="user-menu" style="display: none; position: absolute; right: 32px; top: 60px; background-color: #282828; border-radius: 4px; box-shadow: 0 16px 24px rgba(0,0,0,0.3); width: 200px;">
+                        <ul style="list-style-type: none; padding: 0; margin: 0;">
+                            <li style="padding: 12px 16px; border-bottom: 1px solid #333;">
+                                <a href="#" onclick="showPage('profile')" style="color: white; text-decoration: none;">Profile</a>
+                            </li>
+                            <li style="padding: 12px 16px; border-bottom: 1px solid #333;">
+                                <a href="#" onclick="showPage('settings')" style="color: white; text-decoration: none;">Settings</a>
+                            </li>
+                            <li style="padding: 12px 16px;">
+                                <a href="#" onclick="logout()" style="color: white; text-decoration: none;">Log out</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Home Content -->
+            <div id="home-content" class="content-section">
+                <section style="margin-bottom: 40px;">
+                    <h2 style="margin-bottom: 20px;">Good afternoon</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;">
+                        <div onclick="showPage('playlist', 'liked')" style="background-color: rgba(255,255,255,0.1); border-radius: 4px; display: flex; align-items: center; cursor: pointer; transition: background-color 0.3s;">
+                            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #450af5, #c4efd9); display: flex; align-items: center; justify-content: center; color: white; border-radius: 4px 0 0 4px;">❤️</div>
+                            <div style="padding: 16px;">Liked Songs</div>
+                        </div>
+                        <div onclick="showPage('playlist', 'discover')" style="background-color: rgba(255,255,255,0.1); border-radius: 4px; display: flex; align-items: center; cursor: pointer; transition: background-color 0.3s;">
+                            <div style="width: 80px; height: 80px; background-color: #1DB954; display: flex; align-items: center; justify-content: center; color: white; border-radius: 4px 0 0 4px;">🎵</div>
+                            <div style="padding: 16px;">Discover Weekly</div>
+                        </div>
+                        <div onclick="showPage('playlist', 'top')" style="background-color: rgba(255,255,255,0.1); border-radius: 4px; display: flex; align-items: center; cursor: pointer; transition: background-color 0.3s;">
+                            <div style="width: 80px; height: 80px; background-color: #E13300; display: flex; align-items: center; justify-content: center; color: white; border-radius: 4px 0 0 4px;">🔥</div>
+                            <div style="padding: 16px;">Top Hits</div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section style="margin-bottom: 40px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0;">Recently played</h2>
+                        <a href="#" style="color: #b3b3b3; text-decoration: none; font-size: 14px;">Show all</a>
+                    </div>
+                    <div id="recently-played" class="grid-container">
+                        <!-- Recently played content will be loaded here -->
+                    </div>
+                </section>
+                
+                <section style="margin-bottom: 40px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0;">Made for you</h2>
+                        <a href="#" style="color: #b3b3b3; text-decoration: none; font-size: 14px;">Show all</a>
+                    </div>
+                    <div id="made-for-you" class="grid-container">
+                        <!-- Made for you content will be loaded here -->
+                    </div>
+                </section>
+            </div>
+            
+            <!-- Search Content (Initially Hidden) -->
+            <div id="search-content" class="content-section" style="display: none;">
+                <div style="margin: 24px 0;">
+                    <input type="text" id="search-input" placeholder="What do you want to listen to?" style="width: 100%; padding: 12px 16px; border-radius: 4px; border: none; background-color: #ffffff; color: #000000; font-size: 16px;">
+                </div>
+                
+                <div id="search-results" style="margin-top: 24px;">
+                    <!-- Search results will appear here -->
+                    <div style="text-align: center; color: #b3b3b3; margin-top: 100px;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+                        <h2>Search for your favorite songs, artists, or podcasts</h2>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Library Content (Initially Hidden) -->
+            <div id="library-content" class="content-section" style="display: none;">
+                <div style="display: flex; margin: 24px 0;">
+                    <button onclick="setLibraryFilter('playlists')" class="library-filter active" style="background-color: #333; color: white; border: none; border-radius: 20px; padding: 8px 16px; margin-right: 8px; cursor: pointer;">Playlists</button>
+                    <button onclick="setLibraryFilter('artists')" class="library-filter" style="background-color: #333; color: white; border: none; border-radius: 20px; padding: 8px 16px; margin-right: 8px; cursor: pointer;">Artists</button>
+                    <button onclick="setLibraryFilter('albums')" class="library-filter" style="background-color: #333; color: white; border: none; border-radius: 20px; padding: 8px 16px; cursor: pointer;">Albums</button>
+                </div>
+                
+                <div id="library-playlists" class="grid-container">
+                    <!-- Library playlists will be loaded here -->
+                </div>
+                
+                <div id="library-artists" class="grid-container" style="display: none;">
+                    <!-- Library artists will be loaded here -->
+                </div>
+                
+                <div id="library-albums" class="grid-container" style="display: none;">
+                    <!-- Library albums will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Playlist View (Initially Hidden) -->
+            <div id="playlist-view" style="display: none;">
+                <div id="playlist-header" style="padding: 32px; display: flex; align-items: flex-end;">
+                    <!-- Playlist header will be loaded here -->
+                </div>
+                
+                <div style="padding: 0 32px;">
+                    <div style="display: flex; align-items: center; margin: 24px 0;">
+                        <button id="play-button" onclick="togglePlayPause()" style="width: 56px; height: 56px; border-radius: 50%; background-color: #1DB954; color: white; border: none; font-size: 24px; cursor: pointer; margin-right: 16px; display: flex; align-items: center; justify-content: center;">▶</button>
+                        <button class="btn" style="font-size: 24px; margin-right: 16px;">♡</button>
+                        <button class="btn" style="font-size: 24px;">⋯</button>
+                    </div>
+                    
+                    <div style="margin: 16px 0;">
+                        <div style="display: grid; grid-template-columns: 16px 4fr 3fr 2fr 1fr; padding: 0 16px 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <div style="color: #b3b3b3; font-size: 14px;">#</div>
+                            <div style="color: #b3b3b3; font-size: 14px;">TITLE</div>
+                            <div style="color: #b3b3b3; font-size: 14px;">ALBUM</div>
+                            <div style="color: #b3b3b3; font-size: 14px;">DATE ADDED</div>
+                            <div style="color: #b3b3b3; font-size: 14px; text-align: right;">⏱️</div>
+                        </div>
+                        
+                        <div id="playlist-tracks">
+                            <!-- Playlist tracks will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Now Playing Bar -->
+        <div class="now-playing-bar">
+            <!-- Track Info -->
+            <div class="track-info">
+                <div id="now-playing-image" style="width: 56px; height: 56px; background-color: #333; margin-right: 16px;"></div>
+                <div>
+                    <div id="now-playing-title" style="font-size: 14px; color: white;">Select a track</div>
+                    <div id="now-playing-artist" style="font-size: 12px; color: #b3b3b3;">Artist</div>
+                </div>
+                <button class="btn" style="margin-left: 16px;">♡</button>
+            </div>
+            
+            <!-- Player Controls -->
+            <div class="player-controls">
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <button class="btn" style="font-size: 16px; margin: 0 8px;">🔀</button>
+                    <button class="btn" style="font-size: 16px; margin: 0 8px;">⏮️</button>
+                    <button id="main-play-button" onclick="togglePlayPause()" class="btn-round">▶</button>
+                    <button class="btn" style="font-size: 16px; margin: 0 8px;">⏭️</button>
+                    <button class="btn" style="font-size: 16px; margin: 0 8px;">🔁</button>
+                </div>
+                <div style="display: flex; align-items: center; width: 100%;">
+                    <span id="current-time" style="font-size: 12px; color: #b3b3b3; margin-right: 8px;">0:00</span>
+                    <div class="progress-bar" onclick="seekTrack(event)">
+                        <div id="progress-bar" class="progress"></div>
+                    </div>
+                    <span id="total-time" style="font-size: 12px; color: #b3b3b3; margin-left: 8px;">0:00</span>
+                </div>
+            </div>
+            
+            <!-- Volume Controls -->
+            <div class="volume-controls">
+                <button class="btn" style="font-size: 16px; margin-right: 8px;">📃</button>
+                <button class="btn" style="font-size: 16px; margin-right: 8px;">🔊</button>
+                <div class="volume-bar" onclick="setVolume(event)">
+                    <div id="volume-bar" class="volume-level"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Playlist Modal (Initially Hidden) -->
+    <div id="create-playlist-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background-color: #282828; border-radius: 8px; padding: 24px; width: 100%; max-width: 500px;">
+            <h2 style="margin-top: 0;">Create playlist</h2>
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; margin-bottom: 8px; color: #b3b3b3;">Name</label>
+                <input type="text" id="playlist-name" placeholder="New Playlist" style="width: 100%; padding: 12px; border-radius: 4px; border: none; background-color: #3E3E3E; color: white;">
+            </div>
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; margin-bottom: 8px; color: #b3b3b3;">Description (optional)</label>
+                <textarea id="playlist-description" placeholder="Give your playlist a description" style="width: 100%; padding: 12px; border-radius: 4px; border: none; background-color: #3E3E3E; color: white; resize: vertical; min-height: 100px;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+                <button onclick="closeCreatePlaylistModal()" class="btn" style="color: white; padding: 12px 24px;">Cancel</button>
+                <button onclick="createPlaylist()" class="btn-primary" style="margin-left: 16px;">Create</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audio Element (Hidden) -->
+    <audio id="audio-player" style="display: none;"></audio>
+    
+    <script>
+        // Simplified mock data
+        const mockData = {
+            currentUser: {
+                id: 'user1',
+                name: 'Music Lover',
+                email: 'user@example.com',
+                followers: 12,
+                following: 45
+            },
+            playlists: [
+                {
+                    id: 'liked',
+                    name: 'Liked Songs',
+                    description: 'Your liked songs',
+                    coverImage: 'gradient',
+                    owner: 'user1',
+                    tracks: ['track1', 'track3', 'track5']
+                },
+                {
+                    id: 'discover',
+                    name: 'Discover Weekly',
+                    description: 'Your weekly mixtape of fresh music',
+                    coverImage: 'green',
+                    owner: 'musicify',
+                    tracks: ['track2', 'track4', 'track6']
+                },
+                {
+                    id: 'top',
+                    name: 'Top Hits',
+                    description: 'The hottest tracks right now',
+                    coverImage: 'orange',
+                    owner: 'musicify',
+                    tracks: ['track1', 'track2', 'track3']
+                }
+            ],
+            artists: [
+                {
+                    id: 'artist1',
+                    name: 'Electronic Dreams',
+                    image: 'blue',
+                    followers: 2543789,
+                    genres: ['electronic', 'dance']
+                },
+                {
+                    id: 'artist2',
+                    name: 'Rock Legends',
+                    image: 'red',
+                    followers: 5876432,
+                    genres: ['rock', 'classic rock']
+                }
+            ],
+            albums: [
+                {
+                    id: 'album1',
+                    name: 'Electronic Odyssey',
+                    artist: 'artist1',
+                    image: 'blue',
+                    year: 2023,
+                    tracks: ['track1', 'track2', 'track3']
+                },
+                {
+                    id: 'album2',
+                    name: 'Rock Anthems',
+                    artist: 'artist2',
+                    image: 'red',
+                    year: 2022,
+                    tracks: ['track4', 'track5', 'track6']
+                }
+            ],
+            tracks: [
+                {
+                    id: 'track1',
+                    name: 'Electric Dreams',
+                    artist: 'artist1',
+                    album: 'album1',
+                    duration: 214,
+                    popularity: 85
+                },
+                {
+                    id: 'track2',
+                    name: 'Digital Love',
+                    artist: 'artist1',
+                    album: 'album1',
+                    duration: 198,
+                    popularity: 78
+                },
+                {
+                    id: 'track3',
+                    name: 'Neon Lights',
+                    artist: 'artist1',
+                    album: 'album1',
+                    duration: 225,
+                    popularity: 82
+                },
+                {
+                    id: 'track4',
+                    name: 'Rock Forever',
+                    artist: 'artist2',
+                    album: 'album2',
+                    duration: 245,
+                    popularity: 90
+                },
+                {
+                    id: 'track5',
+                    name: 'Guitar Heroes',
+                    artist: 'artist2',
+                    album: 'album2',
+                    duration: 232,
+                    popularity: 88
+                },
+                {
+                    id: 'track6',
+                    name: 'Drum Solo',
+                    artist: 'artist2',
+                    album: 'album2',
+                    duration: 187,
+                    popularity: 75
+                }
+            ]
+        };
+        
+        // Initialize database with mock data
+        const initializeDatabase = () => {
+            if (!localStorage.getItem('musicify_data')) {
+                localStorage.setItem('musicify_data', JSON.stringify(mockData));
+            }
+        };
+        
+        // Get data from localStorage
+        const getDatabase = () => {
+            return JSON.parse(localStorage.getItem('musicify_data'));
+        };
+        
+        // Save data to localStorage
+        const saveDatabase = (data) => {
+            localStorage.setItem('musicify_data', JSON.stringify(data));
+        };
+        
+        // Format time (seconds to MM:SS)
+        const formatTime = (seconds) => {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+        };
+        
+        // Get color for artist/album/playlist
+        const getColorForId = (id) => {
+            const colors = {
+                'artist1': '#1E3A8A', // blue
+                'artist2': '#991B1B', // red
+                'album1': '#1E3A8A',
+                'album2': '#991B1B',
+                'liked': 'linear-gradient(135deg, #450af5, #c4efd9)',
+                'discover': '#1DB954',
+                'top': '#E13300'
+            };
+            
+            return colors[id] || '#333';
+        };
+        
+        // Load user data
+        const loadUserData = () => {
+            const data = getDatabase();
+            const user = data.currentUser;
+            
+            document.getElementById('username').textContent = user.name;
+        };
+        
+        // Load playlists in sidebar
+        const loadPlaylists = () => {
+            const data = getDatabase();
+            const playlistList = document.getElementById('playlist-list');
+            playlistList.innerHTML = '';
+            
+            data.playlists.forEach(playlist => {
+                const playlistItem = document.createElement('div');
+                playlistItem.style.padding = '8px 0';
+                playlistItem.innerHTML = `
+                    <a href="#" onclick="showPage('playlist', '${playlist.id}')" class="nav-link">
+                        ${playlist.name}
+                    </a>
+                `;
+                playlistList.appendChild(playlistItem);
+            });
+        };
+        
+        // Load recently played
+        const loadRecentlyPlayed = () => {
+            const data = getDatabase();
+            const recentlyPlayed = document.getElementById('recently-played');
+            recentlyPlayed.innerHTML = '';
+            
+            // Get random tracks for demo
+            const randomTracks = [...data.tracks].sort(() => 0.5 - Math.random()).slice(0, 4);
+            
+            randomTracks.forEach(track => {
+                const album = data.albums.find(a => a.id === track.album);
+                const artist = data.artists.find(a => a.id === track.artist);
+                
+                const trackCard = document.createElement('div');
+                trackCard.className = 'card';
+                trackCard.onclick = () => playTrack(track.id);
+                
+                trackCard.innerHTML = `
+                    <div class="card-image" style="background-color: ${getColorForId(album.id)};">
+                        <div class="play-button">▶</div>
+                    </div>
+                    <div style="font-weight: bold; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${track.name}</div>
+                    <div style="color: #b3b3b3; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${artist.name}</div>
+                `;
+                
+                recentlyPlayed.appendChild(trackCard);
+            });
+        };
+        
+        // Load made for you
+        const loadMadeForYou = () => {
+            const data = getDatabase();
+            const madeForYou = document.getElementById('made-for-you');
+            madeForYou.innerHTML = '';
+            
+            // Use playlists for demo
+            data.playlists.forEach(playlist => {
+                const playlistCard = document.createElement('div');
+                playlistCard.className = 'card';
+                playlistCard.onclick = () => showPage('playlist', playlist.id);
+                
+                let coverStyle = '';
+                if (playlist.coverImage === 'gradient') {
+                    coverStyle = `background: ${getColorForId(playlist.id)};`;
+                } else {
+                    coverStyle = `background-color: ${getColorForId(playlist.id)};`;
+                }
+                
+                playlistCard.innerHTML = `
+                    <div class="card-image" style="${coverStyle}">
+                        <div class="play-button">▶</div>
+                    </div>
+                    <div style="font-weight: bold; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${playlist.name}</div>
+                    <div style="color: #b3b3b3; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${playlist.description}</div>
+                `;
+                
+                madeForYou.appendChild(playlistCard);
+            });
+        };
+        
+        // Load playlist view
+        const loadPlaylistView = (playlistId) => {
+            const data = getDatabase();
+            const playlist = data.playlists.find(p => p.id === playlistId);
+            
+            if (!playlist) return;
+            
+            // Set header
+            const playlistHeader = document.getElementById('playlist-header');
+            let coverStyle = '';
+            if (playlist.coverImage === 'gradient') {
+                coverStyle = `background: ${getColorForId(playlist.id)};`;
+            } else {
+                coverStyle = `background-color: ${getColorForId(playlist.id)};`;
+            }
+            
+            playlistHeader.innerHTML = `
+                <div style="width: 232px; height: 232px; ${coverStyle} margin-right: 24px; box-shadow: 0 4px 60px rgba(0,0,0,0.5);">
+                    ${playlist.id === 'liked' ? '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 64px;">❤️</div>' : ''}
+                </div>
+                <div>
+                    <div style="font-size: 12px; margin-bottom: 8px;">PLAYLIST</div>
+                    <h1 style="font-size: 72px; margin: 0 0 24px 0;">${playlist.name}</h1>
+                    <div style="color: #b3b3b3; margin-bottom: 8px;">${playlist.description}</div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-weight: bold;">Musicify</span>
+                        <span style="margin: 0 4px;">•</span>
+                        <span>${playlist.tracks.length} songs</span>
+                    </div>
+                </div>
+            `;
+            
+            // Load tracks
+            const playlistTracks = document.getElementById('playlist-tracks');
+            playlistTracks.innerHTML = '';
+            
+            playlist.tracks.forEach((trackId, index) => {
+                const track = data.tracks.find(t => t.id === trackId);
+                if (!track) return;
+                
+                const album = data.albums.find(a => a.id === track.album);
+                const artist = data.artists.find(a => a.id === track.artist);
+                
+                const trackRow = document.createElement('div');
+                trackRow.style.display = 'grid';
+                trackRow.style.gridTemplateColumns = '16px 4fr 3fr 2fr 1fr';
+                trackRow.style.padding = '8px 16px';
+                trackRow.style.alignItems = 'center';
+                trackRow.style.borderRadius = '4px';
+                trackRow.style.cursor = 'pointer';
+                
+                const dateAdded = new Date();
+                dateAdded.setDate(dateAdded.getDate() - Math.floor(Math.random() * 30));
+                const dateStr = dateAdded.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                trackRow.innerHTML = `
+                    <div style="color: #b3b3b3;">${index + 1}</div>
+                    <div style="display: flex; align-items: center;">
+                        <div style="width: 40px; height: 40px; background-color: ${getColorForId(album.id)}; margin-right: 16px;"></div>
+                        <div>
+                            <div>${track.name}</div>
+                            <div style="color: #b3b3b3; font-size: 14px;">${artist.name}</div>
+                        </div>
+                    </div>
+                    <div style="color: #b3b3b3;">${album.name}</div>
+                    <div style="color: #b3b3b3;">${dateStr}</div>
+                    <div style="color: #b3b3b3; text-align: right;">${formatTime(track.duration)}</div>
+                `;
+                
+                trackRow.addEventListener('mouseover', () => {
+                    trackRow.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                });
+                
+                trackRow.addEventListener('mouseout', () => {
+                    trackRow.style.backgroundColor = 'transparent';
+                });
+                
+                trackRow.addEventListener('click', () => {
+                    playTrack(track.id);
+                });
+                
+                playlistTracks.appendChild(trackRow);
+            });
+        };
+        
+        // Navigation
+        const showPage = (page, id = null) => {
+            // Hide all content
+            document.getElementById('home-content').style.display = 'none';
+            document.getElementById('search-content').style.display = 'none';
+            document.getElementById('library-content').style.display = 'none';
+            document.getElementById('playlist-view').style.display = 'none';
+            
+            // Hide user menu if open
+            document.getElementById('user-menu').style.display = 'none';
+            
+            // Show selected content
+            switch (page) {
+                case 'home':
+                    document.getElementById('home-content').style.display = 'block';
+                    break;
+                case 'search':
+                    document.getElementById('search-content').style.display = 'block';
+                    break;
+                case 'library':
+                    document.getElementById('library-content').style.display = 'block';
+                    break;
+                case 'playlist':
+                    document.getElementById('playlist-view').style.display = 'block';
+                    loadPlaylistView(id);
+                    break;
+            }
+            
+            // Update active nav link
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            if (page === 'home' || page === 'search' || page === 'library') {
+                const activeLink = document.querySelector(`.nav-link[onclick="showPage('${page}')"]`);
+                if (activeLink) activeLink.classList.add('active');
+            }
+        };
+        
+        // Toggle user menu
+        const toggleUserMenu = () => {
+            const userMenu = document.getElementById('user-menu');
+            userMenu.style.display = userMenu.style.display === 'none' ? 'block' : 'none';
+        };
+        
+        // Set library filter
+        const setLibraryFilter = (filter) => {
+            // Update buttons
+            const buttons = document.querySelectorAll('.library-filter');
+            buttons.forEach(button => {
+                button.style.backgroundColor = '#333';
+            });
+            
+            const activeButton = document.querySelector(`.library-filter[onclick="setLibraryFilter('${filter}')"]`);
+            activeButton.style.backgroundColor = '#535353';
+            
+            // Show/hide content
+            document.getElementById('library-playlists').style.display = 'none';
+            document.getElementById('library-artists').style.display = 'none';
+            document.getElementById('library-albums').style.display = 'none';
+            
+            document.getElementById(`library-${filter}`).style.display = 'grid';
+        };
+        
+        // Create playlist modal
+        const showCreatePlaylistModal = () => {
+            document.getElementById('create-playlist-modal').style.display = 'flex';
+        };
+        
+        const closeCreatePlaylistModal = () => {
+            document.getElementById('create-playlist-modal').style.display = 'none';
+        };
+        
+        const createPlaylist = () => {
+            const name = document.getElementById('playlist-name').value || 'New Playlist';
+            const description = document.getElementById('playlist-description').value || '';
+            
+            const data = getDatabase();
+            
+            // Generate a unique ID
+            const id = 'playlist_' + Date.now();
+            
+            // Create new playlist
+            const newPlaylist = {
+                id,
+                name,
+                description,
+                coverImage: 'green',
+                owner: data.currentUser.id,
+                tracks: []
+            };
+            
+            // Add to database
+            data.playlists.push(newPlaylist);
+            saveDatabase(data);
+            
+            // Reload playlists
+            loadPlaylists();
+            
+            // Close modal
+            closeCreatePlaylistModal();
+            
+            // Navigate to new playlist
+            showPage('playlist', id);
+        };
+        
+        // Logout
+        const logout = () => {
+            alert('This is a demo app. Logout functionality is not implemented.');
+        };
+        
+        // Audio player functionality
+        let isPlaying = false;
+        let currentTrackId = null;
+        let audioInterval = null;
+        
+        const playTrack = (trackId) => {
+            const data = getDatabase();
+            const track = data.tracks.find(t => t.id === trackId);
+            if (!track) return;
+            
+            const album = data.albums.find(a => a.id === track.album);
+            const artist = data.artists.find(a => a.id === track.artist);
+            
+            // Update now playing info
+            document.getElementById('now-playing-title').textContent = track.name;
+            document.getElementById('now-playing-artist').textContent = artist.name;
+            document.getElementById('now-playing-image').style.backgroundColor = getColorForId(album.id);
+            
+            // Update total time
+            document.getElementById('total-time').textContent = formatTime(track.duration);
+            
+            // Reset progress
+            document.getElementById('current-time').textContent = '0:00';
+            document.getElementById('progress-bar').style.width = '0%';
+            
+            // Update play button
+            document.getElementById('main-play-button').innerHTML = '⏸️';
+            if (document.getElementById('play-button')) {
+                document.getElementById('play-button').innerHTML = '⏸️';
+            }
+            
+            // Set as current track
+            currentTrackId = trackId;
+            isPlaying = true;
+            
+            // Clear previous interval
+            if (audioInterval) {
+                clearInterval(audioInterval);
+            }
+            
+            // Simulate playback
+            let currentTime = 0;
+            audioInterval = setInterval(() => {
+                currentTime++;
+                const percentage = (currentTime / track.duration) * 100;
+                document.getElementById('current-time').textContent = formatTime(currentTime);
+                document.getElementById('progress-bar').style.width = `${percentage}%`;
+                
+                // End of track
+                if (currentTime >= track.duration) {
+                    clearInterval(audioInterval);
+                    isPlaying = false;
+                    document.getElementById('main-play-button').innerHTML = '▶';
+                    if (document.getElementById('play-button')) {
+                        document.getElementById('play-button').innerHTML = '▶';
+                    }
+                }
+            }, 1000);
+        };
+        
+        const togglePlayPause = () => {
+            if (!currentTrackId) {
+                // No track selected, play first track from a playlist
+                const data = getDatabase();
+                const firstPlaylist = data.playlists[0];
+                if (firstPlaylist && firstPlaylist.tracks.length > 0) {
+                    playTrack(firstPlaylist.tracks[0]);
+                }
+                return;
+            }
+            
+            if (isPlaying) {
+                // Pause
+                clearInterval(audioInterval);
+                isPlaying = false;
+                document.getElementById('main-play-button').innerHTML = '▶';
+                if (document.getElementById('play-button')) {
+                    document.getElementById('play-button').innerHTML = '▶';
+                }
+            } else {
+                // Resume
+                const data = getDatabase();
+                const track = data.tracks.find(t => t.id === currentTrackId);
+                const currentSeconds = parseInt(document.getElementById('current-time').textContent.split(':')[0]) * 60 + 
+                                      parseInt(document.getElementById('current-time').textContent.split(':')[1]);
+                
+                isPlaying = true;
+                document.getElementById('main-play-button').innerHTML = '⏸️';
+                if (document.getElementById('play-button')) {
+                    document.getElementById('play-button').innerHTML = '⏸️';
+                }
+                
+                let currentTime = currentSeconds;
+                audioInterval = setInterval(() => {
+                    currentTime++;
+                    const percentage = (currentTime / track.duration) * 100;
+                    document.getElementById('current-time').textContent = formatTime(currentTime);
+                    document.getElementById('progress-bar').style.width = `${percentage}%`;
+                    
+                    // End of track
+                    if (currentTime >= track.duration) {
+                        clearInterval(audioInterval);
+                        isPlaying = false;
+                        document.getElementById('main-play-button').innerHTML = '▶';
+                        if (document.getElementById('play-button')) {
+                            document.getElementById('play-button').innerHTML = '▶';
+                        }
+                    }
+                }, 1000);
+            }
+        };
+        
+        const seekTrack = (event) => {
+            if (!currentTrackId) return;
+            
+            const progressBar = event.currentTarget;
+            const rect = progressBar.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const percentage = x / rect.width;
+            
+            const data = getDatabase();
+            const track = data.tracks.find(t => t.id === currentTrackId);
+            const newTime = Math.floor(percentage * track.duration);
+            
+            // Update UI
+            document.getElementById('current-time').textContent = formatTime(newTime);
+            document.getElementById('progress-bar').style.width = `${percentage * 100}%`;
+            
+            // If playing, restart interval
+            if (isPlaying) {
+                clearInterval(audioInterval);
+                
+                let currentTime = newTime;
+                audioInterval = setInterval(() => {
+                    currentTime++;
+                    const newPercentage = (currentTime / track.duration) * 100;
+                    document.getElementById('current-time').textContent = formatTime(currentTime);
+                    document.getElementById('progress-bar').style.width = `${newPercentage}%`;
+                    
+                    // End of track
+                    if (currentTime >= track.duration) {
+                        clearInterval(audioInterval);
+                        isPlaying = false;
+                        document.getElementById('main-play-button').innerHTML = '▶';
+                        if (document.getElementById('play-button')) {
+                            document.getElementById('play-button').innerHTML = '▶';
+                        }
+                    }
+                }, 1000);
+            }
+        };
+        
+        const setVolume = (event) => {
+            const volumeBar = event.currentTarget;
+            const rect = volumeBar.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const percentage = x / rect.width;
+            
+            document.getElementById('volume-bar').style.width = `${percentage * 100}%`;
+        };
+        
+        // Initialize app
+        window.onload = () => {
+            // Initialize database
+            initializeDatabase();
+            
+            // Load user data
+            loadUserData();
+            
+            // Load playlists
+            loadPlaylists();
+            
+            // Load home content
+            loadRecentlyPlayed();
+            loadMadeForYou();
+            
+            // Start on home page
+            showPage('home');
+            
+            // Close modals on outside click
+            window.addEventListener('click', (event) => {
+                const modal = document.getElementById('create-playlist-modal');
+                if (event.target === modal) {
+                    closeCreatePlaylistModal();
+                }
+                
+                const userMenu = document.getElementById('user-menu');
+                if (userMenu.style.display === 'block' && !event.target.closest('button[onclick="toggleUserMenu()"]')) {
+                    userMenu.style.display = 'none';
+                }
+            });
+            
+            // Handle responsive design
+            const handleResize = () => {
+                const sidebar = document.getElementById('sidebar');
+                const mainContent = document.getElementById('main-content');
+                
+                if (window.innerWidth < 768) {
+                    sidebar.style.width = '0';
+                    sidebar.style.padding = '0';
+                    mainContent.style.marginLeft = '0';
+                } else {
+                    sidebar.style.width = '230px';
+                    sidebar.style.padding = '24px 10px';
+                    mainContent.style.marginLeft = '230px';
+                }
+            };
+            
+            window.addEventListener('resize', handleResize);
+            handleResize();
+        };
+    </script>
+</body>
+</html>
